@@ -12,9 +12,9 @@ BASE_EXP_PER_DAMAGE = 4
 
 def ticks_until_exp(max_hit, accuracy, ticks_per_attack, enemy_health,
                  desired_exp_gain, exp_per_damage, iterations):
-"""
-Simulates battles and returns average number of ticks to achieve exp goal
-"""
+    """
+    Simulates battles and returns average number of ticks to achieve exp goal
+    """
     total_ticks = 0
     i = 0
     while i < iterations:
@@ -43,8 +43,8 @@ Simulates battles and returns average number of ticks to achieve exp goal
     return average_ticks
 
 if __name__ == '__main__':
-    if sys.argv.length < 11:
-        print('Not enough arguments for OSRS combat simulator' file=sys.stderr)
+    if len(sys.argv) < 11:
+        print('Not enough arguments for OSRS combat simulator', file=sys.stderr)
         sys.exit(1)
 
     # Read in user stats
