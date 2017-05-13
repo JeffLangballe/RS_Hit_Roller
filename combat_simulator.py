@@ -73,6 +73,7 @@ if __name__ == '__main__':
     if max_hit == 0:
         print('Error, max hit is 0. Check effective strength and bonuses',
             file=sys.stderr)
+        sys.exit(1)
 
     # Calculate time for desired exp gain
     ticks = ticks_until_exp(max_hit, accuracy, ticks_per_attack, enemy_health,
