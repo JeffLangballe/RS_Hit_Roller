@@ -21,7 +21,7 @@ Simulates battles and returns average number of ticks to achieve exp goal
         cur_exp = 0
         while cur_exp < desired_exp_gain:
             cur_health = enemy_health
-            while cur_health < enemy_health:
+            while cur_health > 0:
                 # Simulate an attack
                 damage = combat.hit(max_hit, accuracy)
                 
