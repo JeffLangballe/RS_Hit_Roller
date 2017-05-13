@@ -43,25 +43,25 @@ def ticks_until_exp(max_hit, accuracy, ticks_per_attack, enemy_health,
     return average_ticks
 
 if __name__ == '__main__':
-    if len(sys.argv) < 11:
+    if len(sys.argv) < 12:
         print('Not enough arguments for OSRS combat simulator', file=sys.stderr)
         sys.exit(1)
 
     # Read in user stats
-    effective_attack = sys.argv[0]
-    attack_bonus = sys.argv[1]
-    effective_strength = sys.argv[2]
-    strength_bonus = sys.argv[3]
-    ticks_per_attack = sys.argv[4]
-    desired_exp_gain = sys.argv[5]
+    effective_attack = int(sys.argv[1])
+    attack_bonus = int(sys.argv[2])
+    effective_strength = int(sys.argv[3])
+    strength_bonus = int(sys.argv[4])
+    ticks_per_attack = int(sys.argv[5])
+    desired_exp_gain = int(sys.argv[6])
 
     # Read in enemy stats
-    effective_defence = sys.argv[6]
-    defence_bonus = sys.argv[7]
-    enemy_health = sys.argv[8]
-    exp_multiplier = sys.argv[9]
+    effective_defence = int(sys.argv[7])
+    defence_bonus = int(sys.argv[8])
+    enemy_health = int(sys.argv[9])
+    exp_multiplier = float(sys.argv[10])
 
-    num_iterations = sys.argv[10]
+    num_iterations = int(sys.argv[11])
 
     # Calculate combat stats
     max_hit = combat.max_hit(effective_strength, strength_bonus)

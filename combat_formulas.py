@@ -4,6 +4,7 @@ Formulas taken from official RuneScape forums
 http://services.runescape.com/m=forum/forums.ws?317,318,712,65587452
 """
 
+import math
 import random
 
 def hit(max_hit, accuracy):
