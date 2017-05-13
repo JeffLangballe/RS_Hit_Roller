@@ -37,6 +37,7 @@ def ticks_until_exp(max_hit, accuracy, ticks_per_attack, enemy_health,
                 # Check if exp goal reached before enemy is killed
                 if cur_exp >= desired_exp_gain:
                     break
+        i += 1
 
 
     average_ticks = total_ticks / iterations
@@ -68,7 +69,11 @@ if __name__ == '__main__':
     accuracy = combat.accuracy(effective_attack, attack_bonus,
                                effective_defence, defence_bonus)
     exp_per_damage = BASE_EXP_PER_DAMAGE * exp_multiplier
-    
+
+    if max_hit == 0:
+        print('Error, max hit is 0. Check effective strength and bonuses',
+            file=sys.stderr)
+
     # Calculate time for desired exp gain
     ticks = ticks_until_exp(max_hit, accuracy, ticks_per_attack, enemy_health,
                             desired_exp_gain, exp_per_damage, num_iterations)
@@ -76,6 +81,7 @@ if __name__ == '__main__':
     total_minutes, seconds = divmod(total_seconds, 60)
     hours, minutes = divmod(total_minutes, 60)
 
-    # Output formatted time
+    print('Max hit = ', max_hit)
+    print('Accuracy = ', accuracy)
     print('It will take %d:%02d:%02d to gain %d experience'
         % (hours, minutes, seconds, desired_exp_gain))
