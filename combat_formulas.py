@@ -4,7 +4,20 @@ Formulas taken from official RuneScape forums
 http://services.runescape.com/m=forum/forums.ws?317,318,712,65587452
 """
 
-from random import random
+import random
+
+def hit(max_hit, accuracy):
+"""
+Checks for a miss then generates a hit between 0 and max_hit (inclusive)
+"""
+    if (accuracy > random.random()):
+        # Attack lands. Generate a hit between 0 and max_hit
+        hit = random.choice(range(max_hit+1))
+    else:
+        # Attack misses
+        hit = 0
+    
+    return hit
 
 def max_hit(effective_strength_level, strength_bonus):
 """
