@@ -7,7 +7,7 @@ with static stats
 import sys
 import combat_formulas as combat
 
-TICKS_PER_SECOND = 20.0   # Clock speed of OSRS
+SECONDS_PER_TICK = 0.6   # Clock speed of OSRS
 BASE_EXP_PER_DAMAGE = 4
 
 def ticks_until_exp(max_hit, accuracy, ticks_per_attack, enemy_health,
@@ -78,7 +78,7 @@ if __name__ == '__main__':
     # Calculate time for desired exp gain
     ticks = ticks_until_exp(max_hit, accuracy, ticks_per_attack, enemy_health,
                             desired_exp_gain, exp_per_damage, num_iterations)
-    total_seconds = ticks / TICKS_PER_SECOND
+    total_seconds = ticks * SECONDS_PER_TICK
     total_minutes, seconds = divmod(total_seconds, 60)
     hours, minutes = divmod(total_minutes, 60)
 
