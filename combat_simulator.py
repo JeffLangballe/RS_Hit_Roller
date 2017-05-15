@@ -5,7 +5,7 @@ with static stats
 """
 
 import sys
-import combat_formulas as combat
+import osrs_formulas as osrs
 
 SECONDS_PER_TICK = 0.6   # Clock speed of OSRS
 BASE_EXP_PER_DAMAGE = 4
@@ -23,7 +23,7 @@ def ticks_until_exp(max_hit, accuracy, ticks_per_attack, enemy_health,
             cur_health = enemy_health
             while cur_health > 0:
                 # Simulate an attack
-                damage = combat.hit(max_hit, accuracy)
+                damage = osrs.hit(max_hit, accuracy)
                 
                 # Limit damage to maximum health
                 if damage > cur_health:
@@ -65,8 +65,8 @@ if __name__ == '__main__':
     num_iterations = int(sys.argv[11])
 
     # Calculate combat stats
-    max_hit = combat.max_hit(effective_strength, strength_bonus)
-    accuracy = combat.accuracy(effective_attack, attack_bonus,
+    max_hit = osrs.max_hit(effective_strength, strength_bonus)
+    accuracy = osrs.accuracy(effective_attack, attack_bonus,
                                effective_defence, defence_bonus)
     exp_per_damage = BASE_EXP_PER_DAMAGE * exp_multiplier
 
