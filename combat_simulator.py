@@ -7,9 +7,6 @@ with static stats
 import sys
 import osrs_formulas as osrs
 
-SECONDS_PER_TICK = 0.6   # Clock speed of OSRS
-BASE_EXP_PER_DAMAGE = 4
-
 def ticks_until_exp(max_hit, accuracy, ticks_per_attack, enemy_health,
                  desired_exp_gain, exp_per_damage, iterations):
     """
@@ -68,7 +65,7 @@ if __name__ == '__main__':
     max_hit = osrs.max_hit(effective_strength, strength_bonus)
     accuracy = osrs.accuracy(effective_attack, attack_bonus,
                                effective_defence, defence_bonus)
-    exp_per_damage = BASE_EXP_PER_DAMAGE * exp_multiplier
+    exp_per_damage = osrs.BASE_EXP_PER_DAMAGE * exp_multiplier
 
     if max_hit == 0:
         print('Error, max hit is 0. Check effective strength and bonuses',
@@ -78,7 +75,7 @@ if __name__ == '__main__':
     # Calculate time for desired exp gain
     ticks = ticks_until_exp(max_hit, accuracy, ticks_per_attack, enemy_health,
                             desired_exp_gain, exp_per_damage, num_iterations)
-    total_seconds = ticks * SECONDS_PER_TICK
+    total_seconds = ticks * osrs.SECONDS_PER_TICK
     total_minutes, seconds = divmod(total_seconds, 60)
     hours, minutes = divmod(total_minutes, 60)
 

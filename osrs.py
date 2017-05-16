@@ -1,11 +1,15 @@
 """
-Exposes functions for calculating maximum hit, accuracy, and level in OSRS
+Exposes functions for calculating maximum hit, accuracy, and level in OSRS.
+Provides Player class
 Formulas taken from official RuneScape forums
 http://services.runescape.com/m=forum/forums.ws?317,318,712,65587452
 """
 
 import math
 import random
+
+SECONDS_PER_TICK = 0.6   # Clock speed of OSRS
+BASE_EXP_PER_DAMAGE = 4
 
 def hit(max_hit, accuracy):
     """
@@ -31,8 +35,9 @@ def max_hit(effective_strength_level, strength_bonus):
     hit = 0.5 * effective_strength_level * (strength_bonus + 64) / 640
     return math.floor(hit)
 
-def accuracy(effective_attack_level, attack_bonus,
-             effective_defence_level, defence_bonus):
+def accuracy(
+        effective_attack_level, attack_bonus,
+        effective_defence_level, defence_bonus):
     """
     Returns number from 0-1 indicating chance to hit with a melee or ranged attack
 
@@ -62,6 +67,20 @@ def _accuracy_roll(effective_level, bonus):
     Returns attack (or defence) roll used internally for accuracy calculation
     """
     return effective_level * (bonus + 64)
+
+def effective_level(level, prayer_multiplier, stance_adder, void_multiplier):
+    """
+    Returns effective strength level after factoring in real level and bonuses
+
+    Keyword arguments:
+    level -- Actual level
+    prayer_multiplier -- Multiplier given by prayer bonus
+    stance_adder -- Adder given by from combat stance selection
+    void_multiplier -- Multiplier given by void armour bonus
+    """
+    effective_level = math.floor(level * prayer_multiplier) + 8
+    effective_level = math.floor(effective_level * void_multiplier)
+    return effective_level
 
 def get_level(user_experience):
     """ Returns skill level for a given experience value """
