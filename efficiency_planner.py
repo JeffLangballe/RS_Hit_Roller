@@ -48,7 +48,7 @@ def get_best_scimitar(attack_level):
     """
     Returns tuple of the form (attack_bonus, strength_bonus)
     for the best scimitar (weapon) at a given attack level.
-    Scimitars are almost always the most efficient weapon for a level
+    Scimitars are almost always the most efficient weapon
     """
     if attack_level >= 60:
         # Dragon scimitar
@@ -73,29 +73,24 @@ def get_best_scimitar(attack_level):
         return  (10, 9)
 
 def get_max_hit_increases(
-        start_strength_level, end_strength_level, strength_bonus,
-        prayer_multiplier, stance_adder):
+        start_strength_level, end_strength_level,
+        strength_bonus, stance_adder):
     """
     Returns list of tuples of the form (level, max_hit) for levels between
     start_strength_level and end_strength_level that increase max_hit.
-    Assumes start_strength_level < end_strength_level and nonzero multipliers
+    Assumes start_strength_level < end_strength_level and no multipliers
 
     Keyword arguments:
     start_strength_level -- Current (starting) strength level
     end_strength_level -- Target (end) strength level
-    prayer_multiplier -- Multiplier given by prayer bonus
     stance_adder -- Adder given by from combat stance selection
-    void_multiplier -- Multiplier given by void armour bonus
     """
     greatest_max_hit = 0
     max_hit_increases = []
     cur_strength_level = start_strength_level
     while cur_strength_level < end_strength_level:
         effective_strength = osrs.effective_level(
-            cur_strength_level,
-            prayer_multiplier,
-            stance_adder,
-            void_multiplier)
+            cur_strength_level, 1, stance_adder, 1)
         max_hit = osrs.max_hit(effective_strength, strength_bonus)
 
         if max_hit > greatest_max_hit:
