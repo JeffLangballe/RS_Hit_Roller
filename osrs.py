@@ -32,8 +32,11 @@ def max_hit(effective_strength_level, strength_bonus):
     effective_strenth_level -- visible strength level + modifiers
     strength_bonus -- strength bonus given by the in-game equipment interface
     """
-    hit = 0.5 * effective_strength_level * (strength_bonus + 64) / 640
-    return math.floor(hit)
+    hit = 0.5 + effective_strength_level * (strength_bonus + 64) / 640
+    max_hit = math.floor(hit)
+    print('effective str: ', effective_strength_level)
+    print('maxhit: ', max_hit)
+    return max_hit
 
 def accuracy(
         effective_attack_level, attack_bonus,
