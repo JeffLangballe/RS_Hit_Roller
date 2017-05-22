@@ -78,7 +78,7 @@ def effective_level(level, prayer_multiplier, stance_adder, void_multiplier):
     stance_adder -- Adder given by from combat stance selection
     void_multiplier -- Multiplier given by void armour bonus
     """
-    effective_level = math.floor(level * prayer_multiplier) + 8
+    effective_level = math.floor(level * prayer_multiplier) + stance_adder + 8
     effective_level = math.floor(effective_level * void_multiplier)
     return effective_level
 

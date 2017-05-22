@@ -5,7 +5,7 @@ with static stats
 """
 
 import sys
-import osrs_formulas as osrs
+import osrs
 
 def ticks_until_exp(max_hit, accuracy, ticks_per_attack, enemy_health,
                  desired_exp_gain, exp_per_damage, iterations):
@@ -13,8 +13,7 @@ def ticks_until_exp(max_hit, accuracy, ticks_per_attack, enemy_health,
     Simulates battles and returns average number of ticks to achieve exp goal
     """
     total_ticks = 0
-    i = 0
-    while i < iterations:
+    for i in range(iterations):
         cur_exp = 0
         while cur_exp < desired_exp_gain:
             cur_health = enemy_health
@@ -34,8 +33,6 @@ def ticks_until_exp(max_hit, accuracy, ticks_per_attack, enemy_health,
                 # Check if exp goal reached before enemy is killed
                 if cur_exp >= desired_exp_gain:
                     break
-        i += 1
-
 
     average_ticks = total_ticks / iterations
     return average_ticks
