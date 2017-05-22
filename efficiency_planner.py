@@ -43,12 +43,70 @@ def main():
     end = Level_Pair(end_attack_level, end_strength_level)
     populate_graph(graph, start, end,
         base_attack_bonus, base_strength_bonus, ticks_per_attack)
+    
+    # Solve for shortest path with Dijkstra's algorithm
+    path = shortest_path(graph, start, end)
 
-    # TODO: Solve for shortest path with Dijkstra's algorithm
-
-    # TODO: Display path
+    # Display path
+    print('Level-up order is:')
+    for levels in path:
+        print('Attack =', levels.attack, ' Strength =', levels.strength)
 
     sys.exit(0)
+
+def shortest_path(graph, start, end):
+    """
+    Finds shortest path from start node to end node on weighted graph
+    using Dijkstra's algorithm
+
+    Keywork arguments:
+    graph -- Dict of dicts where graph[A] is a dict mapping A's neighbours to
+        their distances from A. ie. graph[A][B] is distance from A to B
+    start -- Starting node. Assumed to be in graph
+    end -- Ending node. Assumed to be in graph
+    """
+    nodes_to_visit = {start}
+    visited_nodes = set()
+    # Distance from start to start is 0
+    distance_from_start = {start: 0}
+    tentative_parents = {}
+
+    while nodes_to_visit:
+        # The next node should be the one with the smallest weight
+        current = min(
+            [(distance_from_start[node], node) for node in nodes_to_visit]
+        )[1]
+
+        # The end was reached
+        if current == end:
+            break
+
+        nodes_to_visit.discard(current)
+        visited_nodes.add(current)
+
+        edges = graph[current]
+        unvisited_neighbours = set(edges).difference(visited_nodes)
+        for neighbour in unvisited_neighbours:
+            neighbour_distance = distance_from_start[current] + \
+                                 edges[neighbour]
+            if neighbour_distance < distance_from_start.get(neighbour,
+                                                            float('inf')):
+                distance_from_start[neighbour] = neighbour_distance
+                tentative_parents[neighbour] = current
+                nodes_to_visit.add(neighbour)
+
+    return _deconstruct_path(tentative_parents, end)
+
+def _deconstruct_path(tentative_parents, end):
+    """ Returns list of nodes from """
+    if end not in tentative_parents:
+        return None
+    cursor = end
+    path = []
+    while cursor:
+        path.append(cursor)
+        cursor = tentative_parents.get(cursor)
+    return list(reversed(path))
 
 def populate_graph(
         graph, start, end, attack_bonus, strength_bonus, ticks_per_attack):
