@@ -154,20 +154,13 @@ def level_time(start_levels, attack_style, attack_bonus, strength_bonus, ticks_p
         start_exp = osrs.experience[start_levels.strength]
         end_exp = osrs.experience[start_levels.strength+1]
     
-    experience = end_exp - start_exp
-    avg_ticks = combat_simulator.ticks_until_exp(max_hit, accuracy,
-        ticks_per_attack, 60, experience, osrs.BASE_EXP_PER_DAMAGE, ITERATIONS)
-
-    print('Atk=', start_levels.attack)
-    print('Str=', start_levels.strength)
-    print('max=', max_hit)
-    print('acc=', accuracy)
-    print('ticks=', avg_ticks)
-    print()
-
-    return avg_ticks
+    #experience = end_exp - start_exp
+    #avg_ticks = combat_simulator.ticks_until_exp(max_hit, accuracy,
+    #    ticks_per_attack, 60, experience, osrs.BASE_EXP_PER_DAMAGE, ITERATIONS)
+    #return avg_ticks
+    weight = 1 / (accuracy * max_hit / 2)
+    return weight
         
-    
 def get_dps(max_hit, accuracy, ticks_per_attack):
     """ Returns estimated damage per second (dps) """
     average_hit = max_hit / 2 * accuracy
