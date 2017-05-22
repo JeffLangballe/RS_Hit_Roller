@@ -59,9 +59,11 @@ def populate_graph(
     Distances between neighbours are stored in graph[nodeA][nodeB].
     """
 
-    # Create dict at graph[start] if not existing
-    if start not in graph:
-        graph[start] = dict()
+    # Check if already created
+    if start in graph:
+        return
+    
+    graph[start] = dict()
 
     # Recursively create neighbouring level pairs
     if start.attack < end.attack:
@@ -103,7 +105,7 @@ def level_time(start_levels, attack_style, attack_bonus, strength_bonus, ticks_p
     print('max=', max_hit)
     print('acc=', accuracy)
     print('ticks=', avg_ticks)
-    print()  
+    print()
 
     return avg_ticks
         
