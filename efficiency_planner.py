@@ -3,38 +3,134 @@
 Command line tool for finding the most efficient order to level up melee stats
 """
 
+import sys
 from enum import Enum
 import osrs
+import combat_simulator
+
+# Number of simulations for each level-up calculation
+ITERATIONS = 100
 
 def main():
-    # TODO
+    # Read in command-line arguments
+    start_attack_level = int(sys.argv[1])
+    start_strength_level = int(sys.argv[2])
+    end_attack_level = int(sys.argv[3])
+    end_strength_level = int(sys.argv[4])
+    base_attack_bonus = int(sys.argv[5])
+    base_strength_bonus = int(sys.argv[6])
+    ticks_per_attack = int(sys.argv[7])
+
+    # Check for invalid arguments
+    if(
+            not (1 <= start_attack_level <= 99) or
+            not (1 <= start_strength_level <= 99) or
+            not (1 <= end_attack_level <= 99) or
+            not (1 <= end_strength_level <= 99)):
+        print('Input level outside of valid OSRS bounds [1,99]',
+            file=sys.stderr)
+        sys.exit(1)
+
+    if(start_attack_level >= end_attack_level or
+            start_strength_level >= end_strength_level):
+        print('Error. Start levels must be less than end levels',
+            file=sys.stderr)
+        sys.exit(1)
+
+    # Create all level pairs and find distances between them
+    graph = dict()
+    start = Level_Pair(start_attack_level, start_strength_level)
+    end = Level_Pair(end_attack_level, end_strength_level)
+    populate_graph(graph, start, end,
+        base_attack_bonus, base_strength_bonus, ticks_per_attack)
+
+    # TODO: Solve for shortest path with Dijkstra's algorithm
+
+    # TODO: Display path
+
     sys.exit(0)
 
+def populate_graph(
+        graph, start, end, attack_bonus, strength_bonus, ticks_per_attack):
+    """
+    Recursively creates Level_Pair nodes from start up to end.
+    Assumes that end's attack and strength are greater than start's.
+    Neighbours for a node are stored in graph[node].
+    Distances between neighbours are stored in graph[nodeA][nodeB].
+    """
+
+    # Create dict at graph[start] if not existing
+    if start not in graph:
+        graph[start] = dict()
+
+    # Recursively create neighbouring level pairs
+    if start.attack < end.attack:
+        inc_attack = Level_Pair(start.attack + 1, start.strength)
+        graph[start][inc_attack] = level_time(start, Attack_Style.ATTACK,
+            attack_bonus, strength_bonus, ticks_per_attack)
+        populate_graph(graph, inc_attack, end,
+            attack_bonus, strength_bonus, ticks_per_attack)
+    
+    if start.strength < end.strength:
+        inc_strength = Level_Pair(start.attack, start.strength + 1)
+        graph[start][inc_strength] = level_time(start, Attack_Style.STRENGTH,
+            attack_bonus, strength_bonus, ticks_per_attack)
+        populate_graph(graph, inc_strength, end,
+            attack_bonus, strength_bonus, ticks_per_attack)
+
+def level_time(start_levels, attack_style, attack_bonus, strength_bonus, ticks_per_attack):
+    """
+    Runs simulations to determine time to level up attack or strength from
+    starting level
+    Enemy is set as sand crab (60hp, 1 def, 0 def bonus)
+    """
+    max_hit, accuracy = get_max_hit_and_accuracy(start_levels, attack_style,
+        attack_bonus, strength_bonus)
+    
+    if attack_style == Attack_Style.ATTACK:
+        start_exp = osrs.experience[start_levels.attack]
+        end_exp = osrs.experience[start_levels.attack+1]
+    elif attack_style == Attack_Style.STRENGTH:
+        start_exp = osrs.experience[start_levels.strength]
+        end_exp = osrs.experience[start_levels.strength+1]
+    
+    experience = end_exp - start_exp
+    avg_ticks = combat_simulator.ticks_until_exp(max_hit, accuracy,
+        ticks_per_attack, 60, experience, osrs.BASE_EXP_PER_DAMAGE, ITERATIONS)
+
+    print('Atk=', start_levels.attack)
+    print('Str=', start_levels.strength)
+    print('max=', max_hit)
+    print('acc=', accuracy)
+    print('ticks=', avg_ticks)
+    print()  
+
+    return avg_ticks
+        
+    
 def get_dps(max_hit, accuracy, ticks_per_attack):
     """ Returns estimated damage per second (dps) """
     average_hit = max_hit / 2 * accuracy
-    attacks_per_second = 1 / (ticks_per_attack + osrs.SECONDS_PER_TICK)
+    attacks_per_second = 1 / (ticks_per_attack * osrs.SECONDS_PER_TICK)
     return average_hit * attacks_per_second
 
-
 def get_max_hit_and_accuracy(
-        attack_level, strength_level,
-        attack_bonus, strength_bonus, attack_style):
+        levels, attack_style, attack_bonus, strength_bonus):
     """
     Returns tuple of the form, (max_hit, accuracy), for the given levels after
     factoring in the weapons available and the selected attack style.
     Assumes enemy has level 1 defence and 0 defence bonus
     """
-    weapon_attack, weapon_strength = get_best_scimitar(attack_level)
+    weapon_attack, weapon_strength = get_best_scimitar(levels.attack)
     attack_bonus += weapon_attack
     strength_bonus += weapon_strength
 
-    if attack_style == AttackStyle.ATTACK:
-        effective_attack = osrs.effective_level(attack_level, 1, 3, 1)
-        effective_strength = osrs.effective_level(strength_level, 1, 0, 1)
-    elif attack_style == AttackStyle.STRENGTH:
-        effective_attack = osrs.effective_level(attack_level, 1, 0, 1)
-        effective_strength = osrs.effective_level(strength_level, 1, 3, 1)
+    if attack_style == Attack_Style.ATTACK:
+        effective_attack = osrs.effective_level(levels.attack, 1, 3, 1)
+        effective_strength = osrs.effective_level(levels.strength, 1, 0, 1)
+    elif attack_style == Attack_Style.STRENGTH:
+        effective_attack = osrs.effective_level(levels.attack, 1, 0, 1)
+        effective_strength = osrs.effective_level(levels.strength, 1, 3, 1)
 
     enemy_effective_defence = osrs.effective_level(1, 1, 0, 1)
 
@@ -58,7 +154,7 @@ def get_best_scimitar(attack_level):
         return (45, 44)
     elif attack_level >= 30:
         # Adamant scimitar
-        return (29, 28())
+        return (29, 28)
     elif attack_level >= 20:
         # Mithril scimitar
         return (21, 20)
@@ -99,9 +195,25 @@ def get_max_hit_increases(
 
         cur_strength_level += 1
 
-class AttackStyle(Enum):
+class Attack_Style(Enum):
     ATTACK = 1      # Gain attack exp and give +3 effective attack
     STRENGTH = 2    # Gain strength exp and give +3 effective strength
+
+# Contains attack, strength level pairs for use with Dijkstra's algorithm
+class Level_Pair(object):
+    def __init__(self, attack, strength):
+        self.attack = attack
+        self.strength = strength
+    
+    # Make pair usable as dictionary keys
+    def __hash__(self):
+        return hash((self.attack, self.strength))
+
+    def __eq__(self,other):
+        return(self.attack, self.strength) == (other.attack, other.strength)
+    
+    def __ne__(self, other):
+        return not(self == other)
 
 if __name__ == "__main__":
     main()
