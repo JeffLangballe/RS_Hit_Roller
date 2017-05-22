@@ -19,7 +19,6 @@ def main():
     end_strength_level = int(sys.argv[4])
     base_attack_bonus = int(sys.argv[5])
     base_strength_bonus = int(sys.argv[6])
-    ticks_per_attack = int(sys.argv[7])
 
     # Check for invalid arguments
     if(
@@ -42,7 +41,7 @@ def main():
     start = Level_Pair(start_attack_level, start_strength_level)
     end = Level_Pair(end_attack_level, end_strength_level)
     populate_graph(graph, start, end,
-        base_attack_bonus, base_strength_bonus, ticks_per_attack)
+        base_attack_bonus, base_strength_bonus)
     
     # Solve for shortest path with Dijkstra's algorithm
     path = shortest_path(graph, start, end)
@@ -109,7 +108,7 @@ def _deconstruct_path(tentative_parents, end):
     return list(reversed(path))
 
 def populate_graph(
-        graph, start, end, attack_bonus, strength_bonus, ticks_per_attack):
+        graph, start, end, attack_bonus, strength_bonus):
     """
     Recursively creates Level_Pair nodes from start up to end.
     Assumes that end's attack and strength are greater than start's.
@@ -126,26 +125,29 @@ def populate_graph(
     # Recursively create neighbouring level pairs
     if start.attack < end.attack:
         inc_attack = Level_Pair(start.attack + 1, start.strength)
-        graph[start][inc_attack] = level_time(start, Attack_Style.ATTACK,
-            attack_bonus, strength_bonus, ticks_per_attack)
+        graph[start][inc_attack] = level_time_average(
+            start, Attack_Style.ATTACK, attack_bonus, strength_bonus)
         populate_graph(graph, inc_attack, end,
-            attack_bonus, strength_bonus, ticks_per_attack)
+            attack_bonus, strength_bonus)
     
     if start.strength < end.strength:
         inc_strength = Level_Pair(start.attack, start.strength + 1)
-        graph[start][inc_strength] = level_time(start, Attack_Style.STRENGTH,
-            attack_bonus, strength_bonus, ticks_per_attack)
+        graph[start][inc_strength] = level_time_average(
+            start, Attack_Style.STRENGTH, attack_bonus, strength_bonus)
         populate_graph(graph, inc_strength, end,
-            attack_bonus, strength_bonus, ticks_per_attack)
+            attack_bonus, strength_bonus)
 
-def level_time(start_levels, attack_style, attack_bonus, strength_bonus, ticks_per_attack):
+def level_time_simulate(start_levels, attack_style, attack_bonus, strength_bonus):
     """
-    Runs simulations to determine time to level up attack or strength from
-    starting level
+    Runs simulations to determine time (ticks) to level up attack or strength
     Enemy is set as sand crab (60hp, 1 def, 0 def bonus)
+    Weapon is best available scimitar
     """
-    max_hit, accuracy = get_max_hit_and_accuracy(start_levels, attack_style,
-        attack_bonus, strength_bonus)
+    ticks_per_attack = 4    # Scimitar attack speed
+    enemy_health = 60       # Sand crab health
+
+    max_hit, accuracy = get_max_hit_and_accuracy(
+        start_levels, attack_style, attack_bonus, strength_bonus)
     
     if attack_style == Attack_Style.ATTACK:
         start_exp = osrs.experience[start_levels.attack]
@@ -154,18 +156,34 @@ def level_time(start_levels, attack_style, attack_bonus, strength_bonus, ticks_p
         start_exp = osrs.experience[start_levels.strength]
         end_exp = osrs.experience[start_levels.strength+1]
     
-    #experience = end_exp - start_exp
-    #avg_ticks = combat_simulator.ticks_until_exp(max_hit, accuracy,
-    #    ticks_per_attack, 60, experience, osrs.BASE_EXP_PER_DAMAGE, ITERATIONS)
-    #return avg_ticks
-    weight = 1 / (accuracy * max_hit / 2)
-    return weight
-        
-def get_dps(max_hit, accuracy, ticks_per_attack):
-    """ Returns estimated damage per second (dps) """
-    average_hit = max_hit / 2 * accuracy
-    attacks_per_second = 1 / (ticks_per_attack * osrs.SECONDS_PER_TICK)
-    return average_hit * attacks_per_second
+    experience = end_exp - start_exp
+    avg_ticks = combat_simulator.ticks_until_exp(max_hit, accuracy,
+        ticks_per_attack, enemy_health, experience,
+        osrs.BASE_EXP_PER_DAMAGE, ITERATIONS)
+    return avg_ticks
+
+def level_time_average(start_levels, attack_style, attack_bonus, strength_bonus):
+    """
+    Uses average damage to determine time (ticks) to level up attack or strength
+    Enemy has 1 def and 0 def bonus
+    Weapon is best available scimitar
+    """
+    ticks_per_attack = 4 # Scimitar attack speed
+    max_hit, accuracy = get_max_hit_and_accuracy(
+        start_levels, attack_style, attack_bonus, strength_bonus)
+    
+    if attack_style == Attack_Style.ATTACK:
+        start_exp = osrs.experience[start_levels.attack]
+        end_exp = osrs.experience[start_levels.attack+1]
+    elif attack_style == Attack_Style.STRENGTH:
+        start_exp = osrs.experience[start_levels.strength]
+        end_exp = osrs.experience[start_levels.strength+1]
+    
+    experience = end_exp - start_exp
+    avg_hit = accuracy * max_hit / 2
+    exp_per_hit = avg_hit * osrs.BASE_EXP_PER_DAMAGE
+    ticks = experience / exp_per_hit * ticks_per_attack
+    return ticks
 
 def get_max_hit_and_accuracy(
         levels, attack_style, attack_bonus, strength_bonus):
