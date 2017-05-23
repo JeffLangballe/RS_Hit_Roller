@@ -1,6 +1,13 @@
 #!/usr/bin/python
 """
 Command line tool for finding the most efficient order to level up melee stats
+Automatically selects best weapon (scimitar) for current level
+
+To use, enter:
+python efficiency_planner.py <start_ATK> <start_STR> <end_ATK>
+    <end_STR> <ATK_bonus> <STR_bonus>
+from the command line.
+Input ATK and STR bonuses should NOT include any bonus from the weapon.
 """
 
 import sys
@@ -8,10 +15,16 @@ from enum import Enum
 import osrs
 import combat_simulator
 
+
 # Number of simulations for each level-up calculation
 ITERATIONS = 100
 
 def main():
+    if len(sys.argv) < 7:
+        print('Not enough arguments for OSRS efficiency planner',
+            file=sys.stderr)
+        sys.exit(1)
+
     # Read in command-line arguments
     start_attack_level = int(sys.argv[1])
     start_strength_level = int(sys.argv[2])
@@ -53,10 +66,12 @@ def main():
 
     sys.exit(0)
 
+
 def shortest_path(graph, start, end):
     """
     Finds shortest path from start node to end node on weighted graph
-    using Dijkstra's algorithm
+    using Dijkstra's algorithm.
+    Returns list of nodes from start to end making up the shortest route
 
     Keywork arguments:
     graph -- Dict of dicts where graph[A] is a dict mapping A's neighbours to
@@ -68,15 +83,15 @@ def shortest_path(graph, start, end):
     visited_nodes = set()
     # Distance from start to start is 0
     distance_from_start = {start: 0}
-    tentative_parents = {}
+    predecessors = {}   # Store previous node for shortest route for each node
 
     while nodes_to_visit:
-        # The next node should be the one with the smallest weight
+        # Get node with smallest weight
         current = min(
             [(distance_from_start[node], node) for node in nodes_to_visit]
         )[1]
 
-        # The end was reached
+        # If the end is reached, quit
         if current == end:
             break
 
@@ -91,21 +106,23 @@ def shortest_path(graph, start, end):
             if neighbour_distance < distance_from_start.get(neighbour,
                                                             float('inf')):
                 distance_from_start[neighbour] = neighbour_distance
-                tentative_parents[neighbour] = current
+                predecessors[neighbour] = current
                 nodes_to_visit.add(neighbour)
 
-    return _deconstruct_path(tentative_parents, end)
+    return _deconstruct_path(predecessors, end)
 
-def _deconstruct_path(tentative_parents, end):
-    """ Returns list of nodes from """
-    if end not in tentative_parents:
+
+def _deconstruct_path(predecessors, end):
+    """ Traverses backwards through predecessors from end """
+    if end not in predecessors:
         return None
-    cursor = end
+    current = end
     path = []
-    while cursor:
-        path.append(cursor)
-        cursor = tentative_parents.get(cursor)
+    while current:
+        path.append(current)
+        current = predecessors.get(current)
     return list(reversed(path))
+
 
 def populate_graph(
         graph, start, end, attack_bonus, strength_bonus):
@@ -114,6 +131,13 @@ def populate_graph(
     Assumes that end's attack and strength are greater than start's.
     Neighbours for a node are stored in graph[node].
     Distances between neighbours are stored in graph[nodeA][nodeB].
+
+    Keywork arguments:
+    graph -- Empty dictionary to store network of level pairs
+    start -- Starting node
+    end -- Ending node
+    attack_bonus -- Visible attack bonus (excluding bonus from weapon)
+    strength_bonus -- Visible strength bonus (excluding bonus from weapon)
     """
 
     # Check if already created
@@ -125,17 +149,22 @@ def populate_graph(
     # Recursively create neighbouring level pairs
     if start.attack < end.attack:
         inc_attack = Level_Pair(start.attack + 1, start.strength)
+        # Store level-up time
         graph[start][inc_attack] = level_time_average(
             start, Attack_Style.ATTACK, attack_bonus, strength_bonus)
+        # Continue at next node
         populate_graph(graph, inc_attack, end,
             attack_bonus, strength_bonus)
     
     if start.strength < end.strength:
         inc_strength = Level_Pair(start.attack, start.strength + 1)
+        # Store level-up time
         graph[start][inc_strength] = level_time_average(
             start, Attack_Style.STRENGTH, attack_bonus, strength_bonus)
+        # Continue at next node
         populate_graph(graph, inc_strength, end,
             attack_bonus, strength_bonus)
+
 
 def level_time_simulate(start_levels, attack_style, attack_bonus, strength_bonus):
     """
@@ -162,6 +191,7 @@ def level_time_simulate(start_levels, attack_style, attack_bonus, strength_bonus
         osrs.BASE_EXP_PER_DAMAGE, ITERATIONS)
     return avg_ticks
 
+
 def level_time_average(start_levels, attack_style, attack_bonus, strength_bonus):
     """
     Uses average damage to determine time (ticks) to level up attack or strength
@@ -185,6 +215,7 @@ def level_time_average(start_levels, attack_style, attack_bonus, strength_bonus)
     ticks = experience / exp_per_hit * ticks_per_attack
     return ticks
 
+
 def get_max_hit_and_accuracy(
         levels, attack_style, attack_bonus, strength_bonus):
     """
@@ -192,7 +223,7 @@ def get_max_hit_and_accuracy(
     factoring in the weapons available and the selected attack style.
     Assumes enemy has level 1 defence and 0 defence bonus
     """
-    weapon_attack, weapon_strength = get_best_scimitar(levels.attack)
+    weapon_attack, weapon_strength = get_weapon_stats(levels.attack)
     attack_bonus += weapon_attack
     strength_bonus += weapon_strength
 
@@ -211,7 +242,8 @@ def get_max_hit_and_accuracy(
 
     return (max_hit, accuracy)
 
-def get_best_scimitar(attack_level):
+
+def get_weapon_stats(attack_level):
     """
     Returns tuple of the form (attack_bonus, strength_bonus)
     for the best scimitar (weapon) at a given attack level.
@@ -238,6 +270,7 @@ def get_best_scimitar(attack_level):
     else:
         # Iron scimitar
         return  (10, 9)
+
 
 def get_max_hit_increases(
         start_strength_level, end_strength_level,
@@ -266,9 +299,11 @@ def get_max_hit_increases(
 
         cur_strength_level += 1
 
+
 class Attack_Style(Enum):
     ATTACK = 1      # Gain attack exp and give +3 effective attack
     STRENGTH = 2    # Gain strength exp and give +3 effective strength
+
 
 # Contains attack, strength level pairs for use with Dijkstra's algorithm
 class Level_Pair(object):
@@ -285,6 +320,7 @@ class Level_Pair(object):
     
     def __ne__(self, other):
         return not(self == other)
+
 
 if __name__ == "__main__":
     main()
