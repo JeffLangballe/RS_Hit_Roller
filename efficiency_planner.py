@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 """
 Command line tool for finding the most efficient order to level up melee stats
 Automatically selects best weapon (scimitar) for current level

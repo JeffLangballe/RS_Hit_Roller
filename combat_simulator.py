@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 """
 Command line tool for calculating time to achieve a desired exp gain in OSRS
 with static stats
